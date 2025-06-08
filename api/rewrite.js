@@ -11,20 +11,26 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const huggingfaceResponse = await axios.post(
-      'https://api-inference.huggingface.co/models/google/flan-t5-large',
-      { inputs: `Paraphrase this:\n${text}` },
+    const hfRes = await axios.post(
+      'https://api-inference.huggingface.co/models/google/flan-t5-xl',
+      {
+        inputs: `Paraphrase the following professionally:\n\n"${text}"`
+      },
       {
         headers: {
-          Authorization: `Bearer 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`,
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
+          'Content-Type': 'application/json'
         },
       }
     );
 
-    const rewritten = huggingfaceResponse.data?.[0]?.generated_text || '❌ No response';
+    console.log("✅ HF response:", hfRes.data);
+
+    const rewritten = hfRes.data?.[0]?.generated_text || '❌ No response from model';
     res.status(200).json({ rewritten });
+
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error from HuggingFace:", err.response?.data || err.message);
     res.status(500).json({ error: 'Failed to rewrite' });
   }
 };
